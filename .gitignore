@@ -20,3 +20,4 @@ venv/
 
 # Others
 test.txt
+tests/

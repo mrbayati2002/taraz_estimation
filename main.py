@@ -1,16 +1,23 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import requests
 from bs4 import BeautifulSoup
 import csv  
-# import sqlite3
+from sklearn import tree
+import sqlite3
 import sys
 
-# con = sqlite3.connect('database.db')
-# c = con.cursor()
-ts = {}
 
-def lname_optimize(lname):
+# ts = {}
+
+def lname_remove_spaces(lname):
+    s = ''
+    for c in lname:
+        if c not in [' ', '-', ',', '.', ':']:
+            s += c
+    return s
+
+def lname_exr(lname):
     l = 0
     while lname[l] in [' ', '.', ':', '\t'] and l < len(lname):
         l += 1
@@ -21,6 +28,8 @@ def lname_optimize(lname):
     return lname[l:r]
 
 def doing(date, base_url, post_url):
+    con = sqlite3.connect('database.db')
+    c = con.cursor()
     page = requests.get(base_url)
     soup = BeautifulSoup(page.content, 'lxml')
     students = soup.find_all('a', class_='swb')
@@ -46,27 +55,29 @@ def doing(date, base_url, post_url):
         r = requests.post(post_url, data=payload, headers=headers)
         rsoup = BeautifulSoup(r.content, 'lxml')
         scores = rsoup.find_all('td')
-        infos = []
+        # infos = []
         for i in range(12, len(list(scores)) - 2, 3):
             x = []
-            x.append(lname_optimize(scores[i].text))
-            x.append(scores[i + 1].text)
-            x.append(scores[i + 2].text)
-            infos.append(x)
+            x.append(lname_exr(scores[i].text))
+            x.append(int(scores[i + 1].text))
+            x.append(int(scores[i + 2].text))
+            c.execute('CREATE TABLE IF NOT EXISTS %s(score BLOB)'%lname_remove_spaces(x[0]))
+            c.execute('INSERT INTO %s VALUES("%s")'%(lname_remove_spaces(x[0]), str("[%s, %s]"%(x[1], x[2]))))
+            # infos.append(x)
         # with open('output.csv', 'wb') as csvfile:
         #     writer = csv.writer(csvfile)
         #     writer.writerows(tmp)
 
-        f = open('tests/test%s.txt'%str(count + 1), 'w')
-        for i in infos:
-            x = ''
-            for j in i:
-                x += str(j) + '\t'
-            f.write(x + '\n')
-        f.close()
-        print(count + 1, ' ', end='')
+        # f = open('tests/test%s.txt'%str(count + 1), 'w')
+        # for i in infos:
+            # x = ''
+            # for j in i:
+                # x += str(j) + '\t'
+            # f.write(x + '\n')
+        # f.close()
+        print(count + 1)
         sys.stdout.flush()
-    
+    con.commit()
     print('done')
         
 

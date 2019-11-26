@@ -2,21 +2,32 @@
 
 import requests
 from bs4 import BeautifulSoup
+import csv  
 # import sqlite3
-from sys import argv
+import sys
 
 # con = sqlite3.connect('database.db')
 # c = con.cursor()
 ts = {}
 
+def lname_optimize(lname):
+    l = 0
+    while lname[l] in [' ', '.', ':', '\t'] and l < len(lname):
+        l += 1
+    r = len(lname) - 1
+    while lname[r] in [' ', '.', ':', '\t'] and r >= 0:
+        r -= 1
+    r += 1
+    return lname[l:r]
+
 def doing(date, base_url, post_url):
     page = requests.get(base_url)
     soup = BeautifulSoup(page.content, 'lxml')
     students = soup.find_all('a', class_='swb')
-    # for i in range(1, len(students)):
-    for i in range(1, 2):
-        this_id = students[i]['id']
-        payload = '{"ID":"JI/zAToNZghpYO6W8fn7hpq7aFOpRAqu2rWf1oAuHSI="}'
+    for count in range(len(students)):
+    # for count in range(1, 2):
+        this_id = students[count]['id']
+        payload = '{"ID":"%s"}'%this_id
         headers = {
                 'Host': 'www.kanoon.ir',
                 'Proxy-Connection': 'keep-alive',
@@ -35,11 +46,28 @@ def doing(date, base_url, post_url):
         r = requests.post(post_url, data=payload, headers=headers)
         rsoup = BeautifulSoup(r.content, 'lxml')
         scores = rsoup.find_all('td')
-        f = open('test.txt', 'w')
-        for x in scores:
-            f.write(x.text + '\n')
+        infos = []
+        for i in range(12, len(list(scores)) - 2, 3):
+            x = []
+            x.append(lname_optimize(scores[i].text))
+            x.append(scores[i + 1].text)
+            x.append(scores[i + 2].text)
+            infos.append(x)
+        # with open('output.csv', 'wb') as csvfile:
+        #     writer = csv.writer(csvfile)
+        #     writer.writerows(tmp)
+
+        f = open('tests/test%s.txt'%str(count + 1), 'w')
+        for i in infos:
+            x = ''
+            for j in i:
+                x += str(j) + '\t'
+            f.write(x + '\n')
         f.close()
-        print('done')
+        print(count + 1, ' ', end='')
+        sys.stdout.flush()
+    
+    print('done')
         
 
 if __name__ == "__main__":

@@ -7,7 +7,6 @@ from sklearn import tree
 import sqlite3
 import sys
 
-
 # ts = {}
 
 def lname_remove_spaces(lname):
@@ -27,8 +26,8 @@ def lname_exr(lname):
     r += 1
     return lname[l:r]
 
-def doing(date, base_url, post_url):
-    con = sqlite3.connect('database.db')
+def extract_data(date, base_url, post_url):
+    con = sqlite3.connect('dbs/%s.db'%date)
     c = con.cursor()
     page = requests.get(base_url)
     soup = BeautifulSoup(page.content, 'lxml')
@@ -47,7 +46,7 @@ def doing(date, base_url, post_url):
                 'X-Requested-With': 'XMLHttpRequest',
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/78.0.3904.108 Chrome/78.0.3904.108 Safari/537.36',
                 'Content-Type': 'application/json; charset=UTF-8',
-                'Referer': 'http://www.kanoon.ir/Public/TopStudents?main=1&group=1&date=13980901&year=99',
+                'Referer': 'http://www.kanoon.ir/Public/TopStudents?main=1&group=1&date=%s&year=99'%date,
                 'Accept-Encoding': 'gzip, deflate',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Cookie': '_ga=GA1.2.1633088994.1574772182; _gid=GA1.2.1072446753.1574772182; kfasession=4yqpdxkdf3x23fh3iaapdjfi; error=1',
@@ -61,8 +60,8 @@ def doing(date, base_url, post_url):
             x.append(lname_exr(scores[i].text))
             x.append(int(scores[i + 1].text))
             x.append(int(scores[i + 2].text))
-            c.execute('CREATE TABLE IF NOT EXISTS %s(score BLOB)'%lname_remove_spaces(x[0]))
-            c.execute('INSERT INTO %s VALUES("%s")'%(lname_remove_spaces(x[0]), str("[%s, %s]"%(x[1], x[2]))))
+            c.execute('CREATE TABLE IF NOT EXISTS %s(count INT, taraz INT)'%lname_remove_spaces(x[0]))
+            c.execute('INSERT INTO %s VALUES(%i, %i)'%(lname_remove_spaces(x[0]),x[1], x[2]))
             # infos.append(x)
         # with open('output.csv', 'wb') as csvfile:
         #     writer = csv.writer(csvfile)
@@ -79,10 +78,30 @@ def doing(date, base_url, post_url):
         sys.stdout.flush()
     con.commit()
     print('done')
-        
+
+def a_lesson(date, lname, cad):
+    con = sqlite3.connect('dbs/%s.db'%date)
+    c = con.cursor()
+    datas = c.execute('select * from %s'%lname).fetchall()
+    x = []
+    y = []
+    for data in datas:
+        x.append([data[0]])
+        y.append(data[1])
+    clf = tree.DecisionTreeClassifier()
+    clf.fit(x, y)
+    res = clf.predict([[cad]])
+    return res[0]
+
+def testapp(date, base_url, post_url):
+    # extract_data(date, base_url, post_url)
+    lname = 'آمارواحتمال'
+    cad = 1
+    res = a_lesson(date, lname, cad)
+    print(cad, ': ', res)
 
 if __name__ == "__main__":
     date = '13980901'
     base_url = 'http://www.kanoon.ir/Public/TopStudents?main=1&group=1&date=%s&year=99'%date
     post_url = 'http://www.kanoon.ir/Public/TopStudentsWorkbook'
-    doing(date, base_url, post_url)
+    testapp(date, base_url, post_url)

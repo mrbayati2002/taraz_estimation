@@ -20,5 +20,6 @@ venv/
 
 # Others
 test.txt
+notes.txt
 tests/
 .vscode/

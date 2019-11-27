@@ -93,15 +93,8 @@ def a_lesson(date, lname, cad):
     res = clf.predict([[cad]])
     return res[0]
 
-def testapp(date, base_url, post_url):
-    # extract_data(date, base_url, post_url)
-    lname = 'آمارواحتمال'
-    cad = 1
-    res = a_lesson(date, lname, cad)
-    print(cad, ': ', res)
 
 if __name__ == "__main__":
     date = '13980901'
     base_url = 'http://www.kanoon.ir/Public/TopStudents?main=1&group=1&date=%s&year=99'%date
     post_url = 'http://www.kanoon.ir/Public/TopStudentsWorkbook'
-    testapp(date, base_url, post_url)

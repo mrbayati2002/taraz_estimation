@@ -4,7 +4,7 @@ import sqlite3
 from sys import argv
 
 date = argv[1]
-con = sqlite3.connect('dbs/%s.db'%s)
+con = sqlite3.connect('dbs/%s.db'%date)
 c = con.cursor()
 
 def lname_remove_spaces(lname):

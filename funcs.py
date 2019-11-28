@@ -7,7 +7,14 @@ from sklearn import tree
 import sqlite3
 import sys
 
-# ts = {}
+
+def create_table(lname, con, c):
+    lname = lname_remove_spaces(lname_exr(lname))
+    c.execute('CREATE TABLE IF NOT EXISTS %s(count INT, taraz INT)'%lname)
+
+def ins_to_table(lname, cnt, trz, con, c):
+    lname = lname_remove_spaces(lname_exr(lname))
+    c.execute('INSERT INTO %s VALUES(%i, %i)'%(lname, cnt, trz))
 
 def lname_remove_spaces(lname):
     s = ''
@@ -25,6 +32,41 @@ def lname_exr(lname):
         r -= 1
     r += 1
     return lname[l:r]
+
+def conv_lname(lname):
+    new_lname = ''
+    names = {
+        'آمارواحتمال' : 'amrehtml',
+        'آمارواحتمالگواه' : 'amrehtmlgvh',
+        'ادبيات' : 'adbt',
+        'حساباندوازدهم' : 'hsbn2',
+        'دينوزندگي1' : 'dni1',
+        'دينوزندگي3دوازدهم' : 'dni3',
+        'رياضي' : 'ryz',
+        'رياضياتگسستهدوازدهم' : 'gsst',
+        'رياضيپايهدوازدهم' : 'ryz3',
+        'زبان‌‌انگليسي1و3' : 'zbn1_3',
+        'شيمي' : 'shmi',
+        'شيمي1دهم' : 'shmi1',
+        'شيمي2يازدهم' : 'shmi2',
+        'شيمي3دوازدهم' : 'shmi3',
+        'عربي،زبانقرآن1و3' : 'arbi1_3',
+        'فارسي1' : '',
+        'فارسي3' : '',
+        'فيزيك' : '',
+        'فيزيك1دهم' : '',
+        'فيزيك2يازدهم' : '',
+        'فيزيك3دوازدهم' : '',
+        'معارف' : '',
+        'هندسه1دهم' : '',
+        'هندسه1گواهدهم' : '',
+    }
+    if lname in names.keys():
+        new_lname = names[lname]
+    else:
+        print('!!!!!!!!!!!!       %s :lname does\'nt exists in names dict        !!!!!!!!!!!!!!!!'%lname)
+        new_lname = '0'
+    return new_lname
 
 def extract_data(date, base_url, post_url):
     con = sqlite3.connect('dbs/%s.db'%date)
@@ -60,8 +102,8 @@ def extract_data(date, base_url, post_url):
             x.append(lname_exr(scores[i].text))
             x.append(int(scores[i + 1].text))
             x.append(int(scores[i + 2].text))
-            c.execute('CREATE TABLE IF NOT EXISTS %s(count INT, taraz INT)'%lname_remove_spaces(x[0]))
-            c.execute('INSERT INTO %s VALUES(%i, %i)'%(lname_remove_spaces(x[0]),x[1], x[2]))
+            create_table(x[0], con, c)
+            ins_to_table(x[0], x[1], x[2], con, c)
             # infos.append(x)
         # with open('output.csv', 'wb') as csvfile:
         #     writer = csv.writer(csvfile)

@@ -137,6 +137,7 @@ def a_lesson(date, lname, cad):
 
 
 if __name__ == "__main__":
-    date = '13980901'
+    #date = '13980901'
+    date = input("eneter date like: 13980901")
     base_url = 'http://www.kanoon.ir/Public/TopStudents?main=1&group=1&date=%s&year=99'%date
     post_url = 'http://www.kanoon.ir/Public/TopStudentsWorkbook'
